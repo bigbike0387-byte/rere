@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สมัครสมาชิก - ครัวรีเทิน</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .reg-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card reg-card fade-in">
+        <h1 class="logo mb-1">สมัครสมาชิก</h1>
+        <p class="text-muted mb-1">มาเป็นครอบครัวครัวรีเทินกันครับ</p>
+
+        <input type="text" id="reg-username" placeholder="ตั้งชื่อผู้ใช้งาน (English)">
+        <input type="password" id="reg-password" placeholder="รหัสผ่าน">
+
+        <button class="btn btn-primary" style="width: 100%;" onclick="handleRegister()">ยืนยันการสมัคร ✅</button>
+
+        <div class="mt-1" style="border-top: 1px solid #eee; padding-top: 20px;">
+            <p class="text-muted">มีบัญชีแล้ว? <a href="login.html"
+                    style="color: var(--primary); text-decoration: none; font-weight: 500;">เข้าสู่ระบบ</a></p>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script>
+        function handleRegister() {
+            const user = document.getElementById('reg-username').value.trim();
+            const pass = document.getElementById('reg-password').value.trim();
+
+            if (!user || !pass) return alert('กรุณากรอกข้อมูลให้ครบครับ');
+
+            const users = getData(DB_KEYS.USERS);
+            if (users.find(u => u.username === user)) return alert('ชื่อผู้ใช้งานนี้มีคนใช้แล้วครับ');
+
+            users.push({ username: user, password: pass, createdAt: Date.now() });
+            setData(DB_KEYS.USERS, users);
+
+            alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบครับ');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+
+</html>
