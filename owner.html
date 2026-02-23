@@ -4,110 +4,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แดชบอร์ดเจ้าของร้าน - ครัวรีเทิน</title>
+    <title>แดชบอร์ด - ครัวรีเทิน</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
-            padding-bottom: 10px;
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            color: #888;
-            border-radius: 12px;
-        }
-
-        .tab-btn.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-    </style>
 </head>
 
 <body>
-
     <header class="header">
-        <div class="logo">Owner Executive Panel 👑</div>
-        <div style="display: flex; gap: 10px;">
-            <div id="owner-noti" class="badge bg-danger" style="display: none;">!</div>
-            <button class="btn btn-outline btn-sm" onclick="location.href='login.html'">Logout</button>
-        </div>
+        <div class="logo">OWNER DASHBOARD</div>
+        <button class="btn btn-outline" onclick="handleLogout()">Logout</button>
     </header>
-
     <main class="container">
-        <!-- ระบบ Tab -->
-        <div class="tabs">
-            <button id="btn-reports" class="tab-btn active" onclick="switchTab('reports')">รายงาน & วิเคราะห์</button>
-            <button id="btn-manage" class="tab-btn" onclick="switchTab('manage')">จัดการระบบร้าน</button>
-        </div>
-
-        <!-- หน้ารายงาน -->
-        <div id="tab-reports" class="tab-content active fade-in">
-            <div class="stat-grid">
-                <div class="card" style="border-left: 5px solid var(--success);">
-                    <div class="text-muted">รายรับรวม (Paid)</div>
-                    <h2 id="owner-sales" class="logo">0฿</h2>
-                </div>
-                <div class="card" style="border-left: 5px solid var(--info);">
-                    <div class="text-muted">จำนวนออเดอร์</div>
-                    <h2 id="owner-orders">0</h2>
-                </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="card">
+                <small>ยอดขายวันนี้</small>
+                <h1 id="owner-sales">0฿</h1>
             </div>
-
-            <div class="grid">
-                <div class="card" style="grid-column: span 2;">
-                    <h3>เมนูขายดีสูงสุด 🍟</h3>
-                    <div id="best-seller-list" class="mt-1"></div>
-                </div>
-                <div class="card">
-                    <h3>ปัญหาล่าสุดที่แจ้ง ⚠️</h3>
-                    <div id="recent-issues" class="mt-1"></div>
+            <div class="card">
+                <small>จำนวนออเดอร์</small>
+                <h1 id="owner-orders">0</h1>
+            </div>
+        </div>
+        <div class="grid">
+            <div class="card" style="grid-column: span 2;">
+                <h3>กราฟยอดขายรายชั่วโมง 📈</h3>
+                <div id="hourly-chart"
+                    style="display: flex; align-items: flex-end; gap: 4px; height: 120px; padding: 10px; border-bottom: 2px solid #eee; margin-top: 10px;">
                 </div>
             </div>
         </div>
 
-        <!-- หน้าจัดการ -->
-        <div id="tab-manage" class="tab-content fade-in">
-            <div class="grid">
-                <div class="card">
-                    <h3>จัดการเมนูอาหาร 🥘</h3>
-                    <p class="text-muted mb-1">เพิ่ม/ลบ รายการอาหารที่โชว์ให้ลูกค้า</p>
-                    <div id="owner-menu-list"></div>
-                    <button class="btn btn-primary mt-1" style="width: 100%;"
-                        onclick="alert('ฟีเจอร์กำลังตามมาในอัปเดตถัดไป')">+ เพิ่มเมนูใหม่</button>
-                </div>
-                <div class="card">
-                    <h3>สถานะความเคลื่อนไหว 🔔</h3>
-                    <div id="owner-noti-list"></div>
-                </div>
+        <div class="grid">
+            <div class="card" style="grid-column: span 2;">
+                <h3>เมนูขายดีสูงสุด 🍟</h3>
+                <div id="best-seller-list" class="mt-1"></div>
             </div>
         </div>
     </main>
-
     <script src="js/storage.js"></script>
     <script src="js/sync-template.js"></script>
     <script src="js/owner.js"></script>

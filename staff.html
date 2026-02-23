@@ -4,55 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบห้องเครื่อง (KDS) - ครัวรีเทิน</title>
+    <title>ห้องเครื่อง - ครัวรีเทิน</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
-
     <header class="header">
-        <div class="logo">KDS Kitchen Panel 👨🍳</div>
-        <div id="staff-status" class="badge bg-ready">Online</div>
-        <div id="noti-badge" class="badge bg-danger" style="display: none;">0</div>
+        <div class="logo">KITCHEN PANEL</div>
+        <button class="btn btn-outline" onclick="handleLogout()">Logout</button>
     </header>
-
     <main class="container">
-        <!-- ออเดอร์ที่ค้างอยู่ -->
-        <h2 class="mb-1">ออเดอร์ทั้งหมด 📥</h2>
-        <div id="staff-order-list" class="grid fade-in">
-            <!-- ข้อมูลออเดอร์จะถูก Render ที่นี่ -->
-        </div>
-
-        <hr style="margin: 40px 0; border: none; border-top: 1px solid rgba(0,0,0,0.1);">
-
-        <!-- ระบบแชทแยกโต๊ะ -->
-        <div class="card">
-            <h2 class="mb-1">แชทคุยกับลูกค้า 💬</h2>
-            <div id="staff-chat-list">
-                <!-- รายชื่อโต๊ะที่มีแชทจะขึ้นที่นี่ -->
-            </div>
-        </div>
+        <div id="staff-order-list"></div>
     </main>
-
-    <!-- Modal จัดการแชทรายโต๊ะ -->
-    <div id="staff-chat-modal" class="modal-overlay" style="display: none;">
-        <div class="card modal-content fade-in" style="height: 500px; display: flex; flex-direction: column;">
-            <div class="flex-between mb-1">
-                <h3>โต๊ะ <span id="current-chat-table">-</span></h3>
-                <button class="btn" onclick="closeStaffChat()">❌</button>
-            </div>
-            <div id="staff-chat-box"
-                style="flex-grow: 1; overflow-y: auto; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 10px; margin-bottom: 10px;">
-            </div>
-            <div style="display: flex; gap: 5px;">
-                <input type="text" id="staff-chat-input" placeholder="ตอบลูกค้า..."
-                    style="flex-grow: 1; padding: 10px; border-radius: 10px; border: 1px solid #ddd;">
-                <button class="btn btn-primary" onclick="sendStaffMsg()"><i class="fas fa-paper-plane"></i></button>
-            </div>
-        </div>
-    </div>
-
     <script src="js/storage.js"></script>
     <script src="js/sync-template.js"></script>
     <script src="js/staff.js"></script>

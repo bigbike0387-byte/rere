@@ -1,6 +1,5 @@
 /**
- * storage.js - "ครัวรีเทิน" Single Source of Truth
- * ส่วนกลางจัดการข้อมูลทั้งหมดในระบบ
+ * storage.js - "ครัวรีเทิน" Clean Rebuild with strict RBAC
  */
 
 const DB_KEYS = {
@@ -13,7 +12,7 @@ const DB_KEYS = {
     SESSION: 'krua_session'
 };
 
-// --- ตั้งค่าสิทธิ์และบัญชีถาวร (RBAC Configuration) ---
+// --- ตั้งค่าสิทธิ์และบัญชีถาวร (Strict RBAC Configuration) ---
 
 const FIXED_ACCOUNTS = {
     'guest_customer': { pass: 'krua123', role: 'customer', page: 'customer.html' },
@@ -22,22 +21,28 @@ const FIXED_ACCOUNTS = {
 };
 
 /**
- * ตรวจสอบสิทธิ์การเข้าถึงหน้าเว็บ
- * @param {string} requiredRole - บทบาทที่ต้องการ
+ * ตรวจสอบสิทธิ์การเข้าถึงหน้าเว็บรวดเร็ว
+ * @param {string} requiredRole - บทบาทที่ต้องการ (customer/staff/owner)
  */
 function checkAuth(requiredRole) {
-    const session = localStorage.getItem(DB_KEYS.SESSION);
-    if (!session) {
+    const sessionStr = localStorage.getItem(DB_KEYS.SESSION);
+    if (!sessionStr) {
         window.location.href = 'login.html';
         return false;
     }
-    const user = JSON.parse(session);
-    if (requiredRole === 'any') return true;
-    if (user.role !== requiredRole && user.role !== 'owner') { // เจ้าของเข้าได้ทุกหน้า
-        alert('คุณไม่มีสิทธิ์เข้าใช้หน้านี้ครับ');
-        window.location.href = user.page;
+
+    const user = JSON.parse(sessionStr);
+
+    // กฎ: เจ้าของร้าน (Owner) เข้าได้ทุกหน้า
+    if (user.role === 'owner') return true;
+
+    // กฎ: บทบาททั่วไปต้องตรงกับที่หน้าที่กำหนด
+    if (user.role !== requiredRole) {
+        alert('❌ คุณไม่มีสิทธิ์เข้าใช้หน้านี้ครับ');
+        window.location.href = user.page; // ส่งกลับหน้าหลักของตัวเอง
         return false;
     }
+
     return true;
 }
 
@@ -46,7 +51,7 @@ function handleLogout() {
     window.location.href = 'login.html';
 }
 
-// --- จัดการข้อมูลพื้นฐาน (Base Data Operations) ---
+// --- จัดการข้อมูลพื้นฐาน (Base Operations) ---
 
 function getData(key) {
     try {
@@ -60,21 +65,14 @@ function getData(key) {
 
 function setData(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
-    // ส่ง Event เพื่อให้หน้าอื่นๆ รู้ว่าข้อมูลเปลี่ยน
     window.dispatchEvent(new CustomEvent('krua_sync', { detail: { key, data } }));
 }
 
-// --- สำหรับจัดการเมนู (Menu Management) ---
+// --- Menu Management ---
+function getMenus() { return getData(DB_KEYS.MENUS); }
 
-function getMenus() {
-    return getData(DB_KEYS.MENUS);
-}
-
-// --- สำหรับจัดการออเดอร์ (Order Management) ---
-
-function getOrders() {
-    return getData(DB_KEYS.ORDERS);
-}
+// --- Order Management ---
+function getOrders() { return getData(DB_KEYS.ORDERS); }
 
 function createOrder(table, items) {
     const orders = getOrders();
@@ -89,8 +87,6 @@ function createOrder(table, items) {
     };
     orders.push(newOrder);
     setData(DB_KEYS.ORDERS, orders);
-
-    // แจ้งเตือนสตาฟ
     addNotification('staff', 'order', `โต๊ะ ${table} สั่งอาหารใหม่!`, newOrder.id);
     return newOrder;
 }
@@ -100,88 +96,58 @@ function updateOrderStatus(orderId, newStatus) {
     const idx = orders.findIndex(o => o.id === orderId);
     if (idx !== -1) {
         orders[idx].status = newStatus;
-        if (newStatus === 'paid') {
-            orders[idx].paid = true;
-            addNotification('owner', 'payment', `โต๊ะ ${orders[idx].table} ชำระเงินเรียบร้อย`, orderId);
-        } else if (newStatus === 'ready') {
-            addNotification('customer', 'ready', `อาหารโต๊ะ ${orders[idx].table} พร้อมเสิร์ฟ!`, orderId, orders[idx].table);
-        }
+        if (newStatus === 'paid') orders[idx].paid = true;
         setData(DB_KEYS.ORDERS, orders);
     }
 }
 
-// --- ระบบแจ้งเตือน (Notifications) ---
-
+// --- Notifications ---
 function addNotification(role, type, message, refId = null, targetTable = null) {
     const notifications = getData(DB_KEYS.NOTIFICATIONS);
     notifications.unshift({
         id: Date.now(),
-        role,     // staff / owner / customer
-        type,     // order / chat / issue / ready / payment
-        message,
-        refId,
-        targetTable,
-        read: false,
-        createdAt: Date.now()
+        role, type, message, refId, targetTable,
+        read: false, createdAt: Date.now()
     });
-    setData(DB_KEYS.NOTIFICATIONS, notifications.slice(0, 50)); // เก็บแค่ 50 ล่าสุด
+    setData(DB_KEYS.NOTIFICATIONS, notifications.slice(0, 50));
 }
 
-// --- ระบบแชท (Chat Management) ---
-
+// --- Chat ---
 function sendMessage(table, sender, text) {
     const messages = getData(DB_KEYS.MESSAGES);
-    const msg = {
-        id: Date.now(),
-        table,
-        sender,   // customer / staff
-        text,
-        time: Date.now()
-    };
+    const msg = { id: Date.now(), table, sender, text, time: Date.now() };
     messages.push(msg);
     setData(DB_KEYS.MESSAGES, messages);
-
-    const target = sender === 'customer' ? 'staff' : 'customer';
-    addNotification(target, 'chat', `ข้อความใหม่จาก ${sender === 'customer' ? 'โต๊ะ ' + table : 'ครัว'}`, table, table);
 }
 
-// --- ระบบวิเคราะห์และรายงาน (Analytics) ---
+// --- ระบบวิเคราะห์และรายงาน (Restored Analytics) ---
+
+function getHourlySalesData() {
+    const orders = getOrders().filter(o => o.paid);
+    const hourly = new Array(24).fill(0);
+    orders.forEach(o => {
+        const hour = new Date(o.createdAt).getHours();
+        hourly[hour] += o.totalPrice;
+    });
+    return hourly;
+}
 
 function getReportData() {
-    const orders = getOrders();
-    const paidOrders = orders.filter(o => o.paid);
-
-    const totalSales = paidOrders.reduce((sum, o) => sum + o.totalPrice, 0);
-    const menuCounts = {};
-    paidOrders.forEach(o => {
-        o.items.forEach(i => {
-            menuCounts[i.name] = (menuCounts[i.name] || 0) + i.qty;
-        });
-    });
-
-    const bestSellers = Object.entries(menuCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
-
-    return { totalSales, orderCount: paidOrders.length, bestSellers };
-}
-
-// --- ระบบตรวจสอบสิทธิ์ (Auth Utils) ---
-
-function getCurrentUser() {
-    const session = localStorage.getItem(DB_KEYS.SESSION);
-    return session ? JSON.parse(session) : null;
-}
-
-// --- สถานะแสดงผล (UI Helper) ---
-
-function getStatusText(status) {
-    const map = {
-        waiting: 'รอคิว',
-        cooking: 'กำลังปรุง',
-        ready: 'พร้อมเสิร์ฟ',
-        served: 'เสิร์ฟแล้ว',
-        paid: 'จ่ายแล้ว'
+    const orders = getOrders().filter(o => o.paid);
+    const totalSales = orders.reduce((sum, o) => sum + o.totalPrice, 0);
+    const names = {};
+    orders.forEach(o => o.items.forEach(i => names[i.name] = (names[i.name] || 0) + i.qty));
+    const bestSellers = Object.entries(names).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    return {
+        totalSales,
+        orderCount: orders.length,
+        bestSellers,
+        hourly: getHourlySalesData()
     };
+}
+
+// --- UI Helper ---
+function getStatusText(status) {
+    const map = { waiting: 'รอคิว', cooking: 'กำลังปรุง', ready: 'พร้อมเสิร์ฟ', served: 'เสิร์ฟแล้ว', paid: 'จ่ายแล้ว' };
     return map[status] || status;
 }

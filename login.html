@@ -45,13 +45,28 @@
         <p id="error-msg" style="color: var(--danger); font-size: 0.9rem; margin-top: 10px; display: none;"></p>
 
         <div class="mt-1" style="border-top: 1px solid #eee; padding-top: 20px;">
-            <p class="text-muted">ยังไม่มีบัญชี? <a href="register.html"
-                    style="color: var(--primary); text-decoration: none; font-weight: 500;">สมัครที่นี่</a></p>
+            <p class="text-muted">ทดลองใช้บัญชีสำหรับสาธิตได้ครับ</p>
         </div>
     </div>
 
     <script src="js/storage.js"></script>
-    <script src="js/login.js"></script>
+    <script>
+        function performLogin() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+
+            // ใช้ FIXED_ACCOUNTS จาก storage.js
+            const account = FIXED_ACCOUNTS[user];
+
+            if (account && account.pass === pass) {
+                const sessionData = { username: user, role: account.role, page: account.page, loginTime: Date.now() };
+                localStorage.setItem(DB_KEYS.SESSION, JSON.stringify(sessionData));
+                window.location.href = account.page;
+            } else {
+                alert('Username หรือ Password ไม่ถูกต้องครับ');
+            }
+        }
+    </script>
 </body>
 
 </html>
